@@ -52,6 +52,7 @@ $tableName = "tmp_ws_" . $apodo;
 //recorreremos el array con el input para definir columnas en la tabla temporal
 
 $tags = null;
+$values = null;
 foreach($clienteData as $secciones){
     foreach($secciones as $keys => $data){
         $tags .= ", '" . $keys . "'";
