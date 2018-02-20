@@ -54,12 +54,16 @@ $tableName = "tmp_ws_" . $apodo;
 $tags = null;
 foreach($clienteData as $secciones){
     foreach($secciones as $keys => $data){
-        $tags .= ", " . $keys;
+        $tags .= ", '" . $keys . "'";
 
         if(is_array($data)){
             $values .=  ", NULL";
         }else{
-            $values .=  ", " . $data;
+            if(is_numeric($data)){
+                $values .=  ", " . $data;
+            }else{
+                $values .=  ", '" . $data . "'";
+            }
         }
     }
 }
@@ -72,10 +76,17 @@ nombres, apellido1, apellido2, genero, nacimiento, fono_hog, fono_cel, email, fo
 fechaalta, servicio, producto, capital, estado, observaciones, ejecutivo
 */ 
 
+//obtenemos el codigo
+
+$sqlCod = "SELECT NEXT VALUE FOR dbo.seq_persona AS codigo";
+//blah blah
+
+$codigo = "33123";
+
 
 //CREAMOS UN INSERT SEGUN DATOS DEL XML
-$sqlInsert = "INSERT INTO $tableName ($columns) VALUES ($values);";
-// echo $sqlInsert;
+$sqlInsert = "INSERT INTO $tableName ('COD_REGISTRO', $columns) VALUES ($codigo, $values);";
+ echo $sqlInsert;
 
 
 /*
