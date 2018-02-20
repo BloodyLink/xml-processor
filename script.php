@@ -9,9 +9,9 @@ $xml = simplexml_load_string($xml_data);
 $json = json_encode($xml);//CONVERTIMOS A JSON
 $clienteData = json_decode($json,TRUE);//DE JSON PASAMOS A UN ARRAY
 
-echo "<pre>";
-print_r($clienteData);
-echo "</pre>";
+// echo "<pre>";
+// print_r($clienteData);
+// echo "</pre>";
 
 
 /*
@@ -55,15 +55,28 @@ $tags = null;
 foreach($clienteData as $secciones){
     foreach($secciones as $keys => $data){
         $tags .= ", " . $keys;
+
+        if(is_array($data)){
+            $values .=  ", NULL";
+        }else{
+            $values .=  ", " . $data;
+        }
     }
 }
 
 $columns = substr($tags, 2);
+$values = substr($values, 2);
 /*
 cliente, usuario, password, cc_asegurable, cc_carga, tipo_doc_carga, tipo_carga, 
 nombres, apellido1, apellido2, genero, nacimiento, fono_hog, fono_cel, email, folio, 
 fechaalta, servicio, producto, capital, estado, observaciones, ejecutivo
 */ 
+
+
+//CREAMOS UN INSERT SEGUN DATOS DEL XML
+$sqlInsert = "INSERT INTO $tableName ($columns) VALUES ($values);";
+// echo $sqlInsert;
+
 
 /*
     ESTOS DATOS DEBEN SER PROCESADOS EN UN SP, EL CUAL DEBE DAR UNA RESPUESTA
