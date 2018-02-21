@@ -1,11 +1,15 @@
 <?php
 
-//URL DEL XML QUE SE RECIBE
-$xmlFile = "example-xml-input.xml";
+require_once('ConnectionDAO.php');
 
-$xml_data = file_get_contents($xmlFile);//OBTENEMOS DATOS DEL ARCHIVO
+$connectionDao = new ConnectionDAO();
 
-$xml = simplexml_load_string($xml_data);
+//XML QUE SE RECIBE
+$xmlFile = file_get_contents('php://input'); 
+
+//$xml_data = file_get_contents($xmlFile);//OBTENEMOS DATOS DEL ARCHIVO
+
+$xml = simplexml_load_string($xmlFile);
 $json = json_encode($xml);//CONVERTIMOS A JSON
 $clienteData = json_decode($json,TRUE);//DE JSON PASAMOS A UN ARRAY
 
@@ -60,11 +64,7 @@ foreach($clienteData as $secciones){
         if(is_array($data)){
             $values .=  ", NULL";
         }else{
-            if(is_numeric($data)){
-                $values .=  ", " . $data;
-            }else{
-                $values .=  ", '" . $data . "'";
-            }
+            $values .=  ", '" . $data . "'";
         }
     }
 }
