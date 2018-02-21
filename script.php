@@ -61,7 +61,7 @@ try {
 catch (exception $e) {
     throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
 }
-echo $cliente . " - " . $codigoRegistro;
+
 $respuesta = 0;
 try {
     
