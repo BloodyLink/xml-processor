@@ -27,7 +27,17 @@ catch (exception $e) {
 
 $codigoRegistro = $res["codigo"];
 
-$apodo = "AXA_CO";
+try{
+	$pdo->beginTransaction();
+	$sql = "SELECT apo_cliente FROM a_cli WHERE codu_cliente = '$cliente'";
+	$q   = $pdo->query($sql);
+    $res = $q->fetch();
+	$pdo->commit();
+}catch(exception $e){
+	throw new Exception("no se pudo obtener apodo." . $e->getMessage());
+}
+
+$apodo = $res["apo_cliente"];
 
 $tableName = "tmp_ws_" . $apodo;
 
@@ -36,7 +46,7 @@ $values = null;
 foreach ($clienteData as $secciones) {
     foreach ($secciones as $keys => $data) {
         
-        if ($keys != "cliente") { //temporal... consultar por columna cliente
+        if ($keys != "cliente") {
             $tags .= ", " . $keys;
             if (is_array($data)) {
                 $values .= ", NULL";
@@ -51,39 +61,44 @@ foreach ($clienteData as $secciones) {
 $columns = substr($tags, 2);
 $values  = substr($values, 2);
 
-try {
+ try {
     $pdo->beginTransaction();
     $sql = "INSERT INTO $tableName (COD_REGISTRO, $columns) VALUES ($codigoRegistro, $values);";
     
     $q = $pdo->query($sql);
     $pdo->commit();
-}
-catch (exception $e) {
-    throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
-}
+ }
+ catch (exception $e) {
+     throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
+ }
 
 $respuesta = 0;
 try {
     
-    $insert = "DECLARE    @return_value int,
+    $insert = "	SET NOCOUNT ON
+				DECLARE    @return_value int,
                         @respuesta varchar(max)
 
                 EXEC    @return_value = SP_carga_webservice
                         @cliente = N'$cliente',
                         @registro = $codigoRegistro,
                         @respuesta = @respuesta OUTPUT
-
+				
                 SELECT    @respuesta as N'@respuesta'";
     $bdd    = $connectionDao->getPDO();
     $stmt   = $bdd->prepare($insert);
     $stmt->execute();
     $tabResultat = $stmt->fetch();
+	//var_dump($tabResultat);
     $resultSP    = $tabResultat["@respuesta"];
     
 }
 catch (exception $e) {
     throw new Exception("Hubo un problema al llamar procedimiento." . $e->getMessage());
 }
+
+// var_dump($resultSP);
+// die();
 
 $arrayResultSP = explode("-", $resultSP);
 $estado        = $arrayResultSP[0];
