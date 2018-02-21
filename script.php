@@ -1,8 +1,8 @@
 <?php
 
-require_once('ConnectionDAO.php');
+//require_once('ConnectionDAO.php');
 
-$connectionDao = new ConnectionDAO();
+//$connectionDao = new ConnectionDAO();
 
 //XML QUE SE RECIBE
 $xmlFile = file_get_contents('php://input'); 
@@ -16,6 +16,7 @@ $clienteData = json_decode($json,TRUE);//DE JSON PASAMOS A UN ARRAY
 // echo "<pre>";
 // print_r($clienteData);
 // echo "</pre>";
+
 
 
 /*
@@ -43,6 +44,23 @@ para acá necesitamos solo el RUT del asegurable. Por eso el XML tiene 2 Cédula
 //TODO: CONFIGURAR CONEXION A SQL SERVER
 
 $cliente = $clienteData["acceso"]["cliente"];
+
+// $pdo = new PDO();
+
+/*obtenemos el COD_REGISTRO*/
+// try{
+//     $pdo->beginTransaction();
+//     $sql = "SELECT NEXT VALUE FOR dbo.seq_webservice AS codigo";
+//     $q = $pdo->query($sql);
+//     $res = $q->fetchAll();    
+
+// }catch(exception $e){
+//     throw new Exception("Hubo un problema al obtener codigo." . $e->getMessage());
+// }
+
+// $codigoRegistro = $res["codigo"];
+
+
 
 //OBTENEMOS app_cliente de la BD
 $sql = "SELECT app_cliente FROM a_cli WHERE codu_cliente = '" . $cliente . "';";
@@ -79,28 +97,52 @@ fechaalta, servicio, producto, capital, estado, observaciones, ejecutivo
 
 //obtenemos el codigo
 
-$sqlCod = "SELECT NEXT VALUE FOR dbo.seq_persona AS codigo";
+// $sqlCod = "SELECT NEXT VALUE FOR dbo.seq_persona AS codigo";
 //blah blah
 
-$codigo = "33123";
-
-
 //CREAMOS UN INSERT SEGUN DATOS DEL XML
-$sqlInsert = "INSERT INTO $tableName ('COD_REGISTRO', $columns) VALUES ($codigo, $values);";
- echo $sqlInsert;
+
+// try{
+//     $pdo->beginTransaction();
+//     $sql = "INSERT INTO $tableName ('COD_REGISTRO', $columns) VALUES ($codigoRegistro, $values);";
+//     $q = $pdo->query($sql);  
+
+// }catch(exception $e){
+//     throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
+// }
 
 
-/*
-    ESTOS DATOS DEBEN SER PROCESADOS EN UN SP, EL CUAL DEBE DAR UNA RESPUESTA
-    PARECIDA A LA SIGUIENTE, LA CUAL DEJARE EN UN ARRAY EN BRUTO:
-*/
+
+// try{
+//     $sql = "CALL SP_carga_webservice(?,?);";
+//     $q = $pdo->prepare($sql);
+//     $res = $pdo->execute();
+
+//     $resultSP = $res->fetchAll();
+
+// }catch(exception $e){
+//     throw new Exception("Hubo un problema al llamar procedimiento." . $e->getMessage());
+// }
+
+
+
+
+//TEST
+$resultSP = "513-Formato de la Fecha de Nacimiento del Asegurable es incorrecto";
+
+$arrayResultSP = explode("-", $resultSP);
+$estado = $arrayResultSP[0];
+$descripcion = $arrayResultSP[1];
+
+
+
 
 $responseArray = array(
     "respuesta" => array(
-        "folio" => 201801041724,
-        "cc_carga" => null,
-        "estado" => 100,
-        "descripcion" => "El procedimiento se ha realizado satisfactoriamente"
+        "folio" => $clienteData["solicitud"]["folio"],
+        "cc_carga" => $clienteData["asegurable"]["cc_carga"],
+        "estado" => $estado,
+        "descripcion" => $descripcion
     )
 );
 
@@ -127,5 +169,9 @@ $xml_data = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><data><
 array_to_xml($responseArray,$xml_data);
 
 // $result = $xml_data->asXML('output-test.xml'); //guardamos respuesta en un archivo
+
+
+header("Content-type: text/xml; charset=utf-8");
+echo $xml_data->asXML();
 
 
