@@ -1,15 +1,15 @@
 <?php
 
-//require_once('ConnectionDAO.php');
+require_once('ConnectionDAO.php');
 
-//$connectionDao = new ConnectionDAO();
+$connectionDao = new ConnectionDAO();
 
 //XML QUE SE RECIBE
-$xmlFile = file_get_contents('php://input'); 
+//$xml_data = file_get_contents('php://input'); 
+$xmlFile = "example-xml-input.xml";
+$xml_data = file_get_contents($xmlFile);//OBTENEMOS DATOS DEL ARCHIVO
 
-//$xml_data = file_get_contents($xmlFile);//OBTENEMOS DATOS DEL ARCHIVO
-
-$xml = simplexml_load_string($xmlFile);
+$xml = simplexml_load_string($xml_data);
 $json = json_encode($xml);//CONVERTIMOS A JSON
 $clienteData = json_decode($json,TRUE);//DE JSON PASAMOS A UN ARRAY
 
@@ -45,27 +45,29 @@ para acá necesitamos solo el RUT del asegurable. Por eso el XML tiene 2 Cédula
 
 $cliente = $clienteData["acceso"]["cliente"];
 
-// $pdo = new PDO();
+ $pdo = $connectionDao->getPDO();
 
 /*obtenemos el COD_REGISTRO*/
-// try{
-//     $pdo->beginTransaction();
-//     $sql = "SELECT NEXT VALUE FOR dbo.seq_webservice AS codigo";
-//     $q = $pdo->query($sql);
-//     $res = $q->fetchAll();    
+ try{
+     $pdo->begintransaction();
+     $sql = "select next value for dbo.seq_webservice as codigo";
+     $q = $pdo->query($sql);
+     $res = $q->fetch();    
+		$pdo->commit();
+ }catch(exception $e){
+     throw new exception("hubo un problema al obtener codigo." . $e->getmessage());
+}
 
-// }catch(exception $e){
-//     throw new Exception("Hubo un problema al obtener codigo." . $e->getMessage());
-// }
-
-// $codigoRegistro = $res["codigo"];
-
+$codigoRegistro = $res["codigo"];
+// echo "<pre>";
+// print_r($res);
+// echo "</pre>";
 
 
 //OBTENEMOS app_cliente de la BD
 $sql = "SELECT app_cliente FROM a_cli WHERE codu_cliente = '" . $cliente . "';";
 
-$apodo = "lucho";
+$apodo = "AXA_CO";
 
 //definimos el nombre de la tabla temporal
 $tableName = "tmp_ws_" . $apodo;
@@ -77,13 +79,16 @@ $tags = null;
 $values = null;
 foreach($clienteData as $secciones){
     foreach($secciones as $keys => $data){
-        $tags .= ", '" . $keys . "'";
-
-        if(is_array($data)){
+        
+		if($keys != "cliente"){//temporal... consultar por columna cliente
+		$tags .= ", " . $keys;
+			if(is_array($data)){
             $values .=  ", NULL";
         }else{
             $values .=  ", '" . $data . "'";
         }
+		}
+        
     }
 }
 
@@ -97,36 +102,42 @@ fechaalta, servicio, producto, capital, estado, observaciones, ejecutivo
 
 //obtenemos el codigo
 
-// $sqlCod = "SELECT NEXT VALUE FOR dbo.seq_persona AS codigo";
-//blah blah
+
 
 //CREAMOS UN INSERT SEGUN DATOS DEL XML
 
-// try{
-//     $pdo->beginTransaction();
-//     $sql = "INSERT INTO $tableName ('COD_REGISTRO', $columns) VALUES ($codigoRegistro, $values);";
-//     $q = $pdo->query($sql);  
+ // try{
+     // $pdo->beginTransaction();
+     // $sql = "INSERT INTO $tableName (COD_REGISTRO, $columns) VALUES ($codigoRegistro, $values);";
 
-// }catch(exception $e){
-//     throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
-// }
-
-
-
-// try{
-//     $sql = "CALL SP_carga_webservice(?,?);";
-//     $q = $pdo->prepare($sql);
-//     $res = $pdo->execute();
-
-//     $resultSP = $res->fetchAll();
-
-// }catch(exception $e){
-//     throw new Exception("Hubo un problema al llamar procedimiento." . $e->getMessage());
-// }
+     // $q = $pdo->query($sql);  
+	 // $pdo->commit();
+ // }catch(exception $e){
+     // throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
+ // }
 
 
+ try{
+
+	 
+	 // $sql = "EXEC SP_carga_webservice @cliente = ? , @registro = ?";
+	 
+     // $sth = $pdo->prepare($sql);
+
+		// $sth->bindParam(1, $cliente);
+		// $sth->bindParam(2, $codigoRegistro);
+		
+	 // $res = $sth->execute();
+	// $resultSP = $sth->fetch(PDO::FETCH_ASSOC);
+     //$resultSP = $res->fetch();
+
+ }catch(exception $e){
+     throw new Exception("Hubo un problema al llamar procedimiento." . $e->getMessage());
+ }
 
 
+// echo $resultSP;
+// die();
 //TEST
 $resultSP = "513-Formato de la Fecha de Nacimiento del Asegurable es incorrecto";
 
@@ -171,7 +182,7 @@ array_to_xml($responseArray,$xml_data);
 // $result = $xml_data->asXML('output-test.xml'); //guardamos respuesta en un archivo
 
 
-header("Content-type: text/xml; charset=utf-8");
-echo $xml_data->asXML();
+ header("content-type: text/xml; charset=utf-8");
+echo $xml_data->asxml();
 
 

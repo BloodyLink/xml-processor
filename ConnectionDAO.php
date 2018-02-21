@@ -11,7 +11,7 @@ class ConnectionDAO{
 			die();
 		}
 	}
-	protected function getPDO() {
+	public function getPDO() {
 		return $this->pdo;
 	}
 }
