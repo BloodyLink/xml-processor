@@ -5,15 +5,15 @@ require_once('ConnectionDAO.php');
 $connectionDao = new ConnectionDAO();
 
 //XML QUE SE RECIBE
-//$xml_data = file_get_contents('php://input'); 
-$xmlFile = "example-xml-input.xml";
-$xml_data = file_get_contents($xmlFile);//OBTENEMOS DATOS DEL ARCHIVO
+$xml_data = file_get_contents('php://input'); 
+//$xmlFile = "example-xml-input.xml";
+//$xml_data = file_get_contents($xmlFile);//OBTENEMOS DATOS DEL ARCHIVO
 
 $xml = simplexml_load_string($xml_data);
 $json = json_encode($xml);//CONVERTIMOS A JSON
 $clienteData = json_decode($json,TRUE);//DE JSON PASAMOS A UN ARRAY
 
-// echo "<pre>";
+ // echo "<pre>";
 // print_r($clienteData);
 // echo "</pre>";
 
@@ -65,7 +65,7 @@ $codigoRegistro = $res["codigo"];
 
 
 //OBTENEMOS app_cliente de la BD
-$sql = "SELECT app_cliente FROM a_cli WHERE codu_cliente = '" . $cliente . "';";
+//$sql = "SELECT app_cliente FROM a_cli WHERE codu_cliente = '" . $cliente . "';";
 
 $apodo = "AXA_CO";
 
@@ -106,30 +106,43 @@ fechaalta, servicio, producto, capital, estado, observaciones, ejecutivo
 
 //CREAMOS UN INSERT SEGUN DATOS DEL XML
 
- // try{
-     // $pdo->beginTransaction();
-     // $sql = "INSERT INTO $tableName (COD_REGISTRO, $columns) VALUES ($codigoRegistro, $values);";
+ try{
+      $pdo->beginTransaction();
+      $sql = "INSERT INTO $tableName (COD_REGISTRO, $columns) VALUES ($codigoRegistro, $values);";
 
-     // $q = $pdo->query($sql);  
-	 // $pdo->commit();
- // }catch(exception $e){
-     // throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
- // }
-
-
+      $q = $pdo->query($sql);  
+	  $pdo->commit();
+ }catch(exception $e){
+   throw new Exception("Hubo un problema al insertar en tabla temporal." . $e->getMessage());
+ }
+echo $cliente . " - " . $codigoRegistro;
+$respuesta = 0;
  try{
 
-	 
-	 // $sql = "EXEC SP_carga_webservice @cliente = ? , @registro = ?";
-	 
-     // $sth = $pdo->prepare($sql);
+	$insert = "DECLARE	@return_value int,
+						@respuesta varchar(max)
 
-		// $sth->bindParam(1, $cliente);
-		// $sth->bindParam(2, $codigoRegistro);
-		
-	 // $res = $sth->execute();
-	// $resultSP = $sth->fetch(PDO::FETCH_ASSOC);
-     //$resultSP = $res->fetch();
+				EXEC	@return_value = SP_carga_webservice
+						@cliente = N'$cliente',
+						@registro = $codigoRegistro,
+						@respuesta = @respuesta OUTPUT
+
+				SELECT	@respuesta as N'@respuesta'";
+$bdd = $connectionDao->getPDO();
+
+ $stmt = $bdd->prepare($insert);     
+ // $stmt->bindParam('1', $cliente); 
+ // $stmt->bindParam('2', $codigoRegistro); 
+// $stmt->bindParam('3', $respuesta, PDO::PARAM_INT| PDO::PARAM_INPUT_OUTPUT,10); 
+
+// echo "<pre>";
+// print_r($stmt);
+// echo "</pre>";
+$stmt->execute();
+$tabResultat = $stmt->fetch();
+$resultSP = $tabResultat["@respuesta"];
+//var_dump($resultado);
+ 
 
  }catch(exception $e){
      throw new Exception("Hubo un problema al llamar procedimiento." . $e->getMessage());
@@ -139,7 +152,7 @@ fechaalta, servicio, producto, capital, estado, observaciones, ejecutivo
 // echo $resultSP;
 // die();
 //TEST
-$resultSP = "513-Formato de la Fecha de Nacimiento del Asegurable es incorrecto";
+//$resultSP = "513-Formato de la Fecha de Nacimiento del Asegurable es incorrecto";
 
 $arrayResultSP = explode("-", $resultSP);
 $estado = $arrayResultSP[0];
@@ -183,6 +196,6 @@ array_to_xml($responseArray,$xml_data);
 
 
  header("content-type: text/xml; charset=utf-8");
-echo $xml_data->asxml();
+ echo $xml_data->asxml();
 
 
