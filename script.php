@@ -1,15 +1,16 @@
 <?php
-
-require_once('ConnectionDAO.php');
-
-$connectionDao = new ConnectionDAO();
-
 $xml_data = file_get_contents('php://input');
-
 $xml         = simplexml_load_string($xml_data);
+// require_once('ConnectionDAO.php');
+
+// $connectionDao = new ConnectionDAO();
+
+
 $json        = json_encode($xml); 
 $clienteData = json_decode($json, TRUE); 
 
+print_r($clienteData);
+/*
 $cliente = $clienteData["acceso"]["cliente"];
 
 $pdo = $connectionDao->getPDO();
@@ -133,3 +134,6 @@ array_to_xml($responseArray, $xml_data);
 
 header("content-type: text/xml; charset=utf-8");
 echo $xml_data->asxml();
+*/
+
+?>
