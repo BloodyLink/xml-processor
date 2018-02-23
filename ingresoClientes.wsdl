@@ -1,0 +1,38 @@
+<definitions xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://localhost/xml-with-php/Script.php" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns="http://schemas.xmlsoap.org/wsdl/" targetNamespace="http://localhost/xml-with-php/Script.php">
+<types>
+<xsd:schema targetNamespace="http://localhost/xml-with-php/Script.php">
+<xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+<xsd:import namespace="http://schemas.xmlsoap.org/wsdl/"/>
+</xsd:schema>
+</types>
+<message name="Script.ingresoDataRequest">
+<part name="type" type="xsd:string"/>
+</message>
+<message name="Script.ingresoDataResponse">
+<part name="return" type="xsd:string"/>
+</message>
+<portType name="servicioClientesPortType">
+<operation name="Script.ingresoData">
+<documentation>Ingresa Clientes</documentation>
+<input message="tns:Script.ingresoDataRequest"/>
+<output message="tns:Script.ingresoDataResponse"/>
+</operation>
+</portType>
+<binding name="servicioClientesBinding" type="tns:servicioClientesPortType">
+<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+<operation name="Script.ingresoData">
+<soap:operation soapAction="http://localhost/xml-with-php/Script.php#ingresoData" style="rpc"/>
+<input>
+<soap:body use="literal" namespace="http://localhost/xml-with-php/Script.php"/>
+</input>
+<output>
+<soap:body use="literal" namespace="http://localhost/xml-with-php/Script.php"/>
+</output>
+</operation>
+</binding>
+<service name="servicioClientes">
+<port name="servicioClientesPort" binding="tns:servicioClientesBinding">
+<soap:address location="http://localhost/xml-with-php/Script.php"/>
+</port>
+</service>
+</definitions>
