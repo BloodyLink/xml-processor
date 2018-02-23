@@ -6,14 +6,8 @@ require_once('lib/nusoap.php');
  class Script extends ConnectionDAO {
 
     public function ingresoData ($xml_data) {
-        
-        $xml_data = file_get_contents('php://input');
 
-        $xml         = simplexml_load_string($xml_data);
-        $json        = json_encode($xml); 
-        $clienteData = json_decode($json, TRUE); 
-
-        $cliente = $clienteData["acceso"]["cliente"];
+        $cliente = $xml_data["generacion"]["acceso"]["cliente"];
 
         $pdo = $this->getPDO();
 
@@ -46,7 +40,7 @@ require_once('lib/nusoap.php');
 
         $tags   = null;
         $values = null;
-        foreach ($clienteData as $secciones) {
+        foreach ($xml_data["generacion"] as $secciones) {
             foreach ($secciones as $keys => $data) {
                 
                 if ($keys != "cliente") {
@@ -67,7 +61,6 @@ require_once('lib/nusoap.php');
         try {
             $pdo->beginTransaction();
             $sql = "INSERT INTO $tableName (COD_REGISTRO, $columns) VALUES ($codigoRegistro, $values);";
-            
             $q = $pdo->query($sql);
             $pdo->commit();
         }
@@ -88,7 +81,7 @@ require_once('lib/nusoap.php');
                                 @respuesta = @respuesta OUTPUT
                         
                         SELECT    @respuesta as N'@respuesta'";
-            $bdd    = $connectionDao->getPDO();
+            $bdd    = $this->getPDO();
             $stmt   = $bdd->prepare($insert);
             $stmt->execute();
             $tabResultat = $stmt->fetch();
@@ -104,21 +97,12 @@ require_once('lib/nusoap.php');
         $descripcion   = $arrayResultSP[1];
         $responseArray = array(
             "respuesta" => array(
-                "folio" => $clienteData["solicitud"]["folio"],
-                "cc_carga" => $clienteData["asegurable"]["cc_carga"],
+                "folio" => $xml_data["generacion"]["solicitud"]["folio"],
+                "cc_carga" => $xml_data["generacion"]["asegurable"]["cc_carga"],
                 "estado" => $estado,
                 "descripcion" => $descripcion
             )
         );
-
-        $responseArray = array(
-                "respuesta" => array(
-                    "folio" => 201801041724,
-                    "cc_carga" => null,
-                    "estado" => 100,
-                    "descripcion" => "El procedimiento se ha realizado satisfactoriamente"
-                )
-            );
 
         function array_to_xml($data, &$xml_data)
         {
@@ -135,26 +119,27 @@ require_once('lib/nusoap.php');
             }
         }
 
-        $xml_data = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><data></data>');
+        $xml_data_new = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><data></data>');
 
-        array_to_xml($responseArray, $xml_data);
+        array_to_xml($responseArray, $xml_data_new);
 
         header("content-type: text/xml; charset=utf-8");
-        return $xml_data->asxml();
+
+        return $xml_data_new->asxml();
     }
     
 }
 
 $server = new soap_server();
-$server->configureWSDL("servicioClientes", "http://localhost/xml-with-php/Script.php");
+$server->configureWSDL("servicioClientes", "192.168.10.3:5020/xml-processor/script.php");
  
 $server->register("Script.ingresoData",
     array("type" => "xsd:string"),
     array("return" => "xsd:string"),
-    "http://localhost/xml-with-php/Script.php",
-    "http://localhost/xml-with-php/Script.php#ingresoData",
+    "192.168.10.3:5020/xml-processor/script.php",
+    "192.168.10.3:5020/xml-processor/script.php#ingresoData",
     "rpc",
     "literal",
     "Ingresa Clientes");
  
-@$server->service(file_get_contents("php://input"));
+@$server->service($HTTP_RAW_POST_DATA);
